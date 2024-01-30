@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Anonymous Message Board</title>
+	<meta name="description" content="freeCodeCamp - Information Security and Quality Assurance Project: Anonymous Message Board">
+	<link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" href="/public/bootstrap.min.css">
+	<link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+	<div class="container">
+		<div class="p-4 my-4 bg-light rounded-3">
+			<div class="row">
+				<div class="col">
+					<header>
+						<h1 id="boardTitle" class="text-center"></h1>
+					</header>
+
+					<div id="submitNewThread" class="mb-3">
+						<h3>Submit a new thread:</h3>
+						<form id="newThread" class="text-center" action="/api/" method="post">
+							<textarea class="form-control mb-2" rows="8" cols="120" name="text" placeholder="Thread text..." required></textarea>
+							<input class="form-control mb-2" type="text" name="delete_password" placeholder="Password to delete" required>
+							<input class="btn btn-primary" type="submit" value="Submit">
+						</form>
+					</div>
+
+					<div id="boardDisplay"></div>
+
+					<hr>
+
+					<div class="footer text-center">by <a href="https://www.freecodecamp.org" target="_blank">freeCodeCamp</a> (ISQA3) & <a href="https://www.freecodecamp.org/adam777" target="_blank">Adam</a> | <a href="https://github.com/Adam777Z/freecodecamp-project-message-board" target="_blank">GitHub</a></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	document.addEventListener('DOMContentLoaded', (event) => {
+		var currentBoard = window.location.pathname.slice(3).replace(/\/$/, '');
+		var url = '/api/threads/' + currentBoard + '?limit=0';
+
+		document.querySelector('#boardTitle').innerHTML = `Welcome to <a href="/">/</a><a href="/b/${currentBoard}">b/${currentBoard}</a>`;
+
+		fetch(url, {
+			'method': 'GET'
+		})
+		.then((response) => {
+			if (response['ok']) {
+				return response.json();
+			} else {
+				throw 'Error';
+			}
+		})
+		.then((data) => {
+			let html = '';
+
+			data.forEach((thread) => {
+				html += `
+				<div class="card thread mb-2">
+					<h5 class="card-header">${thread['text']}</h5>
+					<div class="card-body">
+						<div class="replies">
+				`;
+
+				let hiddenCount = thread['replycount'] - 3;
+				if (hiddenCount < 1) {
+					hiddenCount = 0;
+				}
+
+				html += `<p class="card-text">${thread['replycount']} replies total (${hiddenCount} hidden) - <a href="/b/${currentBoard}/${thread['_id']}">See the full thread here</a>.</p>`;
+
+				thread['replies'].forEach((reply) => {
+					html += `
+							<div class="card reply mb-2">
+								<div class="card-body">
+									<p class="card-text">${reply['text']}</p>
+								</div>
+								<div class="card-footer text-muted">
+									<div class="row align-items-center">
+										<div class="col">
+											<p class="mb-2"><span class="fw-semibold">Created on:</span> <span>${reply['created_on']}</span></p>
+											<p class="id m-0"><span class="fw-semibold">Reply ID:</span> <span>${reply['_id']}</span></p>
+										</div>
+										<div class="col d-flex justify-content-end">
+											<form class="board-form me-4" action="/api/replies/${currentBoard}" method="put">
+												<input type="hidden" name="thread_id" value="${thread['_id']}">
+												<input type="hidden" name="reply_id" value="${reply['_id']}">
+												<input class="btn btn-warning" type="submit" value="Report reply">
+											</form>
+											<form class="board-form d-flex" action="/api/replies/${currentBoard}" method="delete">
+												<input type="hidden" name="thread_id" value="${thread['_id']}" required>
+												<input type="hidden" name="reply_id" value="${reply['_id']}" required>
+												<input class="form-control me-2" type="text" name="delete_password" placeholder="Password to delete" required>
+												<input class="btn btn-danger" type="submit" value="Delete reply">
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+					`;
+				});
+
+				html += `
+							<div class="mt-3">
+								<form class="text-center" action="/api/replies/${currentBoard}" method="post">
+									<input type="hidden" name="thread_id" value="${thread['_id']}">
+									<textarea class="form-control mb-2" rows="5" cols="80" name="text" placeholder="Quick reply..." required></textarea>
+									<input class="form-control mb-2" type="text" name="delete_password" placeholder="Password to delete" required>
+									<input class="btn btn-primary" type="submit" value="Submit">
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer text-muted">
+						<div class="row align-items-center">
+							<div class="col">
+								<p class="mb-2"><span class="fw-semibold">Created on:</span> <span>${thread['created_on']}</span></p>
+								<p class="m-0"><span class="fw-semibold">Thread ID:</span> <span>${thread['_id']}</span></p>
+							</div>
+							<div class="col d-flex justify-content-end">
+								<form class="board-form me-4" action="/api/threads/${currentBoard}" method="put">
+									<input type="hidden" name="thread_id" value="${thread['_id']}">
+									<input class="btn btn-warning" type="submit" value="Report thread">
+								</form>
+								<form class="board-form d-flex" action="/api/threads/${currentBoard}" method="delete">
+									<input type="hidden" name="thread_id" value="${thread['_id']}" required>
+									<input class="form-control me-2" type="text" name="delete_password" placeholder="Password to delete" required>
+									<input class="btn btn-danger" type="submit" value="Delete thread">
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				`;
+			});
+
+			document.querySelector('#boardDisplay').innerHTML = html;
+		})
+		.catch((error) => {
+			console.log(error);
+		});
+
+		document.querySelector('#newThread').addEventListener('submit', (event2) => {
+			event2.target.setAttribute('action', '/api/threads/' + currentBoard);
+		});
+
+		document.querySelector('#boardDisplay').addEventListener('submit', (event2) => {
+			if (event2.target.closest('.board-form')) {
+				event2.preventDefault();
+
+				let url = event2.target.closest('.board-form').getAttribute('action');
+
+				fetch(url, {
+					'method': event2.target.closest('.board-form').getAttribute('method').toUpperCase(),
+					'body': new URLSearchParams(new FormData(event2.target.closest('.board-form')))
+				})
+				.then((response) => {
+					if (response['ok']) {
+						return response.text();
+					} else {
+						throw 'Error';
+					}
+				})
+				.then((data) => {
+					try {
+						data = JSON.parse(data);
+					} catch (error) {
+						// console.log(error);
+					}
+
+					if (data['error'] !== undefined) {
+						data = data['error'];
+					}
+
+					alert(data);
+
+					if (data == 'success' && (event2.submitter.value == 'Delete reply' || event2.submitter.value == 'Delete thread')) {
+						window.location.reload();
+					}
+				})
+				.catch((error) => {
+					console.log(error);
+				});
+			}
+		});
+	});
+	</script>
+</body>
+</html>

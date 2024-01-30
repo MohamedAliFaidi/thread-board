@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Anonymous Message Board</title>
+	<meta name="description" content="freeCodeCamp - Information Security and Quality Assurance Project: Anonymous Message Board">
+	<link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<link rel="stylesheet" href="/public/bootstrap.min.css">
+	<link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+	<div class="container">
+		<div class="p-4 my-4 bg-light rounded-3">
+			<div class="row">
+				<div class="col">
+					<header>
+						<h1 id="title" class="text-center">Anonymous Message Board</h1>
+					</header>
+
+					<div id="userstories">
+						<h3>User Stories:</h3>
+						<ol>
+							<li>Only allow your site to be loading in an iFrame on your own pages.</li>
+							<li>Do not allow DNS prefetching.</li>
+							<li>Only allow your site to send the referrer for your own pages.</li>
+							<li>I can <b>POST</b> a thread to a specific message board by passing form data <code>text</code> and <code>delete_password</code> to <i>/api/threads/{board}</i>. (Recommended: res.redirect to board page /b/{board})<br>
+								Saved will be <code>_id</code>, <code>text</code>, <code>created_on</code> (date &amp; time), <code>bumped_on</code> (date &amp; time, starts same as created_on), <code>reported</code> (boolean), <code>delete_password</code>, &amp; <code>replies</code> (array).</li>
+							<li>I can <b>POST</b> a reply to a thead on a specific board by passing form data <code>text</code>, <code>delete_password</code>, &amp; <code>thread_id</code> to <i>/api/replies/{board}</i> and it will also update the <code>bumped_on</code> date to the comment's date. (Recommended: res.redirect to thread page /b/{board}/{thread_id})<br>
+								In the thread's 'replies' array will be saved <code>_id</code>, <code>text</code>, <code>created_on</code>, <code>delete_password</code>, &amp; <code>reported</code>.</li>
+							<li>I can <b>GET</b> an array of the most recent 10 bumped threads on the board with only the most recent 3 replies from <i>/api/threads/{board}</i>. The <code>reported</code> and <code>delete_password</code> fields will not be sent. Also include <code>replycount</code> (total number of replies).</li>
+							<li>I can <b>GET</b> an entire thread with all its replies from <i>/api/replies/{board}?thread_id={thread_id}</i>. Also hiding the same fields (<code>reported</code> and <code>delete_password</code>).</li>
+							<li>I can delete a thread completely if I send a <b>DELETE</b> request to <i>/api/threads/{board}</i> and pass along the <code>thread_id</code> &amp; <code>delete_password</code>. (Text response will be 'incorrect password' or 'success')</li>
+							<li>I can delete a post (just changing the text to '[deleted]') if I send a <b>DELETE</b> request to <i>/api/replies/{board}</i> and pass along the <code>thread_id</code>, <code>reply_id</code>, &amp; <code>delete_password</code>. (Text response will be 'incorrect password' or 'success')</li>
+							<li>I can report a thread and change its reported value to true by sending a <b>PUT</b> request to <i>/api/threads/{board}</i> and pass along the <code>thread_id</code>. (Text response will be 'success')</li>
+							<li>I can report a reply and change its reported value to true by sending a <b>PUT</b> request to <i>/api/replies/{board}</i> and pass along the <code>thread_id</code> &amp; <code>reply_id</code>. (Text response will be 'success')</li>
+							<li>Complete functional tests that wholly test routes and pass.</li>
+						</ol>
+						<div class="table-responsive-sm">
+							<table class="table">
+								<thead>
+									<tr>
+										<th scope="col">API</th>
+										<th scope="col">GET</th>
+										<th scope="col">POST</th>
+										<th scope="col">PUT</th>
+										<th scope="col">DELETE</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th scope="row">/api/threads/{board}</th>
+										<td>list recent threads</td>
+										<td>create thread</td>
+										<td>report thread</td>
+										<td>delete thread with password</td>
+									</tr>
+									<tr>
+										<th scope="row">/api/replies/{board}</th>
+										<td>show all replies on thread</td>
+										<td>create reply on thread</td>
+										<td>report reply on thread</td>
+										<td>change reply to '[deleted]' on thread</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<h3>Example GET usage:</h3>
+						<ul>
+							<li><code>/api/threads/{board}</code></li>
+							<li><code>/api/replies/{board}?thread_id={thread_id}</code></li>
+							<li><code><a href="/api/threads/general" target="_blank">/api/threads/general</a></code></li>
+							<li><code>/api/replies/general?thread_id={thread_id}</code></li>
+						</ul>
+						<h2><a href="/b/general">Go to testing <i>'/b/general'</i> board</a></h2>
+					</div>
+
+					<hr>
+
+					<div id="testui">
+						<h2>API Tests:</h2>
+						<div class="row text-center">
+							<div class="col">
+								<h4>New thread</h4>
+								<h5>(POST /api/threads/:board)</h5>
+								<form class="test-form-new" action="/api/threads/" method="post">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<textarea class="form-control mb-2" name="text" placeholder="Thread text..." required></textarea>
+									<input type="text" class="form-control mb-2" name="delete_password" placeholder="Password to delete" required>
+									<input type="submit" class="btn btn-primary" value="Submit">
+								</form>
+							</div>
+							<div class="col">
+								<h4>Report thread</h4>
+								<h5>(PUT /api/threads/:board)</h5>
+								<form class="test-form" action="/api/threads/" method="put">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<input type="text" class="form-control mb-2" name="thread_id" placeholder="ID of thread to report" required>
+									<input type="submit" class="btn btn-warning" value="Submit">
+								</form>
+							</div>
+							<div class="col">
+								<h4>Delete thread</h4>
+								<h5>(DELETE /api/threads/:board)</h5>
+								<form class="test-form" action="/api/threads/" method="delete">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<input type="text" class="form-control mb-2" name="thread_id" placeholder="ID of thread to delete" required>
+									<input type="text" class="form-control mb-2" name="delete_password" placeholder="Password to delete" required>
+									<input type="submit" class="btn btn-danger" value="Submit">
+								</form>
+							</div>
+						</div>
+
+						<hr>
+
+						<div class="row text-center">
+							<div class="col">
+								<h4>New reply</h4>
+								<h5>(POST /api/replies/:board)</h5>
+								<form class="test-form-new" action="/api/replies/" method="post">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<input type="text" class="form-control mb-2" name="thread_id" placeholder="Thread ID" required>
+									<textarea class="form-control mb-2" name="text" placeholder="Reply text..." required></textarea>
+									<input type="text" class="form-control mb-2" name="delete_password" placeholder="Password to delete" required>
+									<input type="submit" class="btn btn-primary" value="Submit">
+								</form>
+							</div>
+							<div class="col">
+								<h4>Report reply</h4>
+								<h5>(PUT /api/replies/:board)</h5>
+								<form class="test-form" action="/api/replies/" method="put">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<input type="text" class="form-control mb-2" name="thread_id" placeholder="Thread ID" required>
+									<input type="text" class="form-control mb-2" name="reply_id" placeholder="ID of reply to report" required>
+									<input type="submit" class="btn btn-warning" value="Submit">
+								</form>
+							</div>
+							<div class="col">
+								<h4>Delete reply</h4>
+								<h5>(DELETE /api/replies/:board)</h5>
+								<form class="test-form" action="/api/replies/" method="delete">
+									<input type="text" class="form-control mb-2" name="board" placeholder="Board" required>
+									<input type="text" class="form-control mb-2" name="thread_id" placeholder="Thread ID" required>
+									<input type="text" class="form-control mb-2" name="reply_id" placeholder="ID of reply to delete" required>
+									<input type="text" class="form-control mb-2" name="delete_password" placeholder="Password to delete" required>
+									<input type="submit" class="btn btn-danger" value="Submit">
+								</form>
+							</div>
+						</div>
+					</div>
+
+					<hr>
+
+					<div class="footer text-center">by <a href="https://www.freecodecamp.org" target="_blank">freeCodeCamp</a> (ISQA3) & <a href="https://www.freecodecamp.org/adam777" target="_blank">Adam</a> | <a href="https://github.com/Adam777Z/freecodecamp-project-message-board" target="_blank">GitHub</a></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	document.addEventListener('DOMContentLoaded', (event) => {
+		document.querySelectorAll('.test-form-new').forEach((e) => {
+			e.addEventListener('submit', (event2) => {
+				let url = event2.target.getAttribute('action') + event2.target.querySelector('[name="board"]').value;
+				event2.submitter.setAttribute('formaction', url);
+			});
+		});
+
+		document.querySelectorAll('.test-form').forEach((e) => {
+			e.addEventListener('submit', (event2) => {
+				event2.preventDefault();
+
+				let url = event2.target.getAttribute('action') + event2.target.querySelector('[name="board"]').value;
+
+				fetch(url, {
+					'method': event2.target.getAttribute('method').toUpperCase(),
+					'body': new URLSearchParams(new FormData(event2.target))
+				})
+				.then((response) => {
+					if (response['ok']) {
+						return response.text();
+					} else {
+						throw 'Error';
+					}
+				})
+				.then((data) => {
+					try {
+						data = JSON.parse(data);
+					} catch (error) {
+						// console.log(error);
+					}
+
+					if (data['error'] !== undefined) {
+						data = data['error'];
+					}
+
+					alert(data);
+				})
+				.catch((error) => {
+					console.log(error);
+				});
+			});
+		});
+	});
+	</script>
+</body>
+</html>
